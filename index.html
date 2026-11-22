@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<title>ARKIS AI — Personal Assistant</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--line:#183b56;--cyan:#58dcff;--blue:#258dff;--text:#eaf7ff;--muted:#9bb4c7;--danger:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0%,#123452 0,#07111f 45%,#040a12 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:760px;margin:auto;padding:18px 14px calc(28px + env(safe-area-inset-bottom))}
+header{text-align:center;padding:18px 8px 12px}
+.brand{letter-spacing:.28em;color:var(--cyan);font-size:12px;font-weight:700}
+h1{font-size:34px;letter-spacing:.16em;margin:8px 0 4px;text-shadow:0 0 24px #258dff88}
+.sub{color:var(--muted);font-size:13px}
+.core{width:178px;height:178px;margin:20px auto 14px;border-radius:50%;display:grid;place-items:center;position:relative;background:radial-gradient(circle,#163b58 0,#0b1b2d 58%,#07111f 70%);border:1px solid #2e9bc7;box-shadow:0 0 25px #258dff55,inset 0 0 25px #58dcff22}
+.core:before,.core:after{content:"";position:absolute;border-radius:50%;inset:-9px;border:1px solid #58dcff55;animation:spin 12s linear infinite}
+.core:after{inset:-17px;border-color:#258dff66;animation-direction:reverse;animation-duration:18s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.core button{border:0;background:transparent;color:var(--cyan);font-size:42px;cursor:pointer;width:100%;height:100%;border-radius:50%}
+.core.listening{box-shadow:0 0 42px #58dcffbb,inset 0 0 35px #58dcff44}
+.status{text-align:center;color:var(--cyan);font-size:13px;min-height:20px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:14px 0}
+.tool{background:#0c1b2b;border:1px solid var(--line);border-radius:14px;padding:12px 8px;color:var(--text);font-size:12px;cursor:pointer}
+.tool span{display:block;font-size:21px;margin-bottom:5px}
+.panel{background:#0b1929d9;border:1px solid var(--line);border-radius:17px;padding:14px;margin:12px 0}
+.panel h2{font-size:14px;margin:0 0 10px;color:var(--cyan);letter-spacing:.06em}
+#chat{height:240px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px}
+.msg{max-width:88%;padding:10px 12px;border-radius:13px;font-size:14px;line-height:1.45;white-space:pre-wrap}
+.user{align-self:flex-end;background:#16466a}.bot{align-self:flex-start;background:#14283b;border:1px solid #21415b}
+.row{display:flex;gap:8px;margin-top:10px}
+input,select{min-width:0;flex:1;background:#071321;border:1px solid var(--line);border-radius:11px;padding:12px;color:var(--text);font-size:14px}
+button.action{background:linear-gradient(135deg,#147fc0,#2456a8);color:white;border:0;border-radius:11px;padding:0 15px;font-weight:650}
+.small{font-size:12px;color:var(--muted);line-height:1.5}
+.result{font-size:13px;line-height:1.5;color:#d7eaf6;overflow-wrap:anywhere}
+footer{text-align:center;color:#6f8da3;font-size:11px;padding:16px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div class="brand">PERSONAL INTELLIGENCE SYSTEM</div>
+ <h1>ARKIS</h1>
+ <div class="sub">Your Personal AI Assistant</div>
+ <div class="core" id="core"><button id="mic" aria-label="Mulai bicara">◉</button></div>
+ <div class="status" id="status">Sistem siap. Tekan lingkaran untuk berbicara.</div>
+</header>
+
+<div class="grid">
+ <button class="tool" id="loc"><span>📍</span>Lokasi saya</button>
+ <button class="tool" id="cam"><span>📷</span>Kamera</button>
+ <button class="tool" id="rem"><span>⏰</span>Pengingat</button>
+ <button class="tool" id="voice"><span>🔊</span>Ulangi suara</button>
+</div>
+
+<section class="panel">
+ <h2>ARKIS CONVERSATION</h2>
+ <div id="chat"><div class="msg bot">Halo. Saya ARKIS. Saya siap membantu. Tekan tombol mikrofon atau ketik pesan di bawah.</div></div>
+ <div class="row"><input id="message" placeholder="Ketik perintah untuk ARKIS..." autocomplete="off"><button class="action" id="send">Kirim</button></div>
+</section>
+
+<section class="panel">
+ <h2>QUICK ACCESS</h2>
+ <div class="row"><button class="tool" id="openInstagram">📱 Instagram</button><button class="tool" id="openMap">🗺️ Google Maps</button></div>
+ <p class="small">ARKIS hanya membuka layanan saat lu menekan tombol. Akses lokasi dan kamera meminta izin dari iPhone.</p>
+</section>
+
+<section class="panel">
+ <h2>STATUS PERANGKAT</h2>
+ <div class="result" id="device">Memeriksa dukungan browser...</div>
+ <div class="result" id="locationResult" style="margin-top:8px">Lokasi belum diminta.</div>
+ <video id="video" playsinline autoplay muted style="display:none;width:100%;border-radius:12px;margin-top:10px"></video>
+</section>
+<footer>ARKIS AI · Prototype 1.0 · Dibuat untuk Safari iPhone</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const chat=$('chat'),statusEl=$('status');
+let lastReply='Halo. Saya ARKIS. Ada yang bisa saya bantu?';
+function status(t){statusEl.textContent=t}
+function add(text,who='bot'){const d=document.createElement('div');d.className='msg '+who;d.textContent=text;chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
+function speak(text){lastReply=text;if(!('speechSynthesis'in window)){status('Fitur suara tidak didukung browser ini.');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='id-ID';u.rate=.94;u.pitch=.88;speechSynthesis.speak(u)}
+async function ask(text){
+ add(text,'user');$('message').value='';status('ARKIS sedang memproses...');
+ // Connect to your own secure backend by setting window.ARKIS_API_URL.
+ if(window.ARKIS_API_URL){
+  try{const r=await fetch(window.ARKIS_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();const reply=data.reply||data.response||data.text||'Server merespons tanpa teks.';add(reply);status('ARKIS online');speak(reply);return}catch(e){console.error(e);status('Server AI tidak terhubung. Mode lokal aktif.')}
+ }
+ const t=text.toLowerCase();let reply;
+ if(t.includes('halo')||t.includes('hai')) reply='Halo. Saya ARKIS. Apa yang ingin lu kerjakan hari ini?';
+ else if(t.includes('jam')||t.includes('tanggal')) reply='Saya belum terhubung ke layanan waktu real-time. Periksa jam dan tanggal pada iPhone lu.';
+ else if(t.includes('siapa')) reply='Saya ARKIS, asisten pribadi versi awal. Otak AI online perlu dihubungkan melalui backend yang aman.';
+ else if(t.includes('lokasi')) reply='Tekan tombol Lokasi saya agar iPhone meminta izin lokasi. Saya tidak bisa mengambil GPS secara diam-diam.';
+ else if(t.includes('instagram')) reply='Saya bisa membuka Instagram melalui tombol akses cepat. Pengelolaan pesan dan pesanan memerlukan integrasi resmi dan izin akun.';
+ else reply='Perintah diterima. Saat ini ARKIS berjalan dalam mode demo lokal. Untuk jawaban AI sungguhan, hubungkan backend AI yang aman; jangan masukkan API key ke file HTML.';
+ add(reply);status('Mode demo lokal');speak(reply);
+}
+$('send').onclick=()=>{const v=$('message').value.trim();if(v)ask(v)};
+$('message').addEventListener('keydown',e=>{if(e.key==='Enter')$('send').click()});
+$('voice').onclick=()=>speak(lastReply);
+$('openInstagram').onclick=()=>window.open('https://www.instagram.com/','_blank');
+$('openMap').onclick=()=>window.open('https://maps.google.com/','_blank');
+$('loc').onclick=()=>{
+ if(!navigator.geolocation){$('locationResult').textContent='Browser tidak mendukung geolocation.';return}
+ status('Meminta izin lokasi dari iPhone...');
+ navigator.geolocation.getCurrentPosition(p=>{const lat=p.coords.latitude,lon=p.coords.longitude;$('locationResult').textContent=`Lokasi diberikan oleh perangkat:\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lon.toFixed(6)}\nAkurasi perkiraan: ±${Math.round(p.coords.accuracy)} meter\n[Buka di Google Maps]`;const a=document.createElement('a');a.href=`https://maps.google.com/?q=${lat},${lon}`;a.target='_blank';a.textContent='Buka titik di Google Maps';a.style.color='#58dcff';$('locationResult').appendChild(document.createElement('br'));$('locationResult').appendChild(a);status('Lokasi berhasil dibaca dengan izin.')},e=>{const m={1:'Izin lokasi ditolak. Aktifkan dari pengaturan iPhone.',2:'Lokasi tidak tersedia.',3:'Permintaan lokasi kehabisan waktu.'};$('locationResult').textContent=m[e.code]||e.message;status('Lokasi tidak dapat diakses.')},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+};
+$('cam').onclick=async()=>{
+ const v=$('video');try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=stream;v.style.display='block';status('Kamera aktif. Tekan tombol Kamera lagi untuk menutup.');$('cam').onclick=()=>{stream.getTracks().forEach(t=>t.stop());v.style.display='none';v.srcObject=null;status('Kamera ditutup.');$('cam').onclick=arguments.callee};}catch(e){status('Kamera tidak diizinkan atau tidak didukung.')}
+};
+$('rem').onclick=()=>{const mins=prompt('Pengingat berapa menit dari sekarang? Masukkan angka, misalnya 10:');const n=Number(mins);if(!Number.isFinite(n)||n<=0){status('Pengingat dibatalkan.');return}status(`Pengingat dibuat untuk ${n} menit lagi selama halaman tetap aktif.`);setTimeout(()=>{alert('ARKIS: Ini pengingat lu.');speak('Ini pengingat dari ARKIS.');},n*60000)};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){const rec=new SR();rec.lang='id-ID';rec.interimResults=false;rec.maxAlternatives=1;$('mic').onclick=()=>{try{$('core').classList.add('listening');status('Mendengarkan...');rec.start()}catch(e){status('Mikrofon sedang digunakan.')}};rec.onresult=e=>ask(e.results[0][0].transcript);rec.onerror=e=>status('Mikrofon: '+e.error);rec.onend=()=>$('core').classList.remove('listening')}else{$('mic').onclick=()=>status('Speech Recognition tidak tersedia. Coba browser yang mendukung.')}
+$('device').textContent=`Browser: ${navigator.userAgent.includes('iPhone')?'iPhone':'Perangkat lain'} · HTTPS: ${location.protocol==='https:'?'Ya':'Tidak'} · Speech Recognition: ${SR?'tersedia':'tidak tersedia'} · Text-to-Speech: ${'speechSynthesis'in window?'tersedia':'tidak tersedia'}`;
+</script>
+</body></html>
